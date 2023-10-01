@@ -1,85 +1,57 @@
 require('dotenv').config()
 
 const axios = require('axios')
-// console.log(process.env)
-// console.log(new Date(1694034000 * 1000).toLocaleString())
 
+let city = 'Diadema'
 
-// const appid = process.env.appid
-// const q='Itu' = process.env.q
-// const units = process.env.units
-// const cnt = process.env.cnt
-// const lang = process.env.lang
-// const url = process.env.url
-
-//desestruturar
-const {appid, q, units, cnt, language, url} = process.env
-
-const end = `${url}?appid=${appid}&q=${q}&units=${units}&cnt=${cnt}&lang=${language}`
-
-
-//async/await
-
-async function teste(){
-    const resultado = await axios.get(end)
-    for (let previsao of resultado.data.list)
-    console.log(`descrição: ${previsao.weather[0].description}`)
+async function LogLat(city) {
+  const { appid, units, cnt, language, url } = process.env
+  const end1 = `${url}?appid=${appid}&q=${city_replace}&units=${units}&cnt=${cnt}&lang=${language}`
+  const resultado = await axios
+    .get(end1)
+    .then(result => result['data'])
+    .then(result => result.city)
+    .then(result => {
+      console.log(`------------------------------------`)
+      console.log(`País (Sigla): ${result.country}`)
+      return result.coord
+    })
+    .then(result => {
+      console.log(`------------------------------------`)
+      console.log(`Cidade: ${city}`)
+      console.log(`Latitude: ${result.lat}`)
+      console.log(`Longitude: ${result.lon}`)
+      return [result.lat, result.lon]
+    })
+  return resultado
 }
 
-teste()
+async function FeelsLike_Description(lista) {
+  const { appid, url2, language } = process.env
+  const end2 = `${url2}?&lat=${lista[0]}&lon=${lista[1]}&appid=${appid}&lang=${language}`
+  const resultado = await axios
+    .get(end2)
+    .then(result => result['data'])
+    .then(result => {
+      console.log(`------------------------------------`)
+      console.log(`Descrição: ${result.weather[0].description}`)
+      return result
+    })
+    .then(result => result.main)
+    .then(result => {
+      console.log(`------------------------------------`)
+      console.log(
+        `Sensação térmica (Kelvin): ${Math.round(result.feels_like)} k`
+      )
+      console.log(
+        `Sensação térmica (Celsius): ${Math.round(result.feels_like - 273)}°C`
+      )
+      console.log(`------------------------------------`)
+      return result.feels_like
+    })
+  return resultado
+}
 
-//ao inves de devolver um retorno, devolve uma promisse
-// function fatorial(n) {
-//     if(n < 0) return Promise.reject("n não pode ser negativo")
-//     let res = 1
-//     for (let i = 1; i <= n; res *= 1) {
-//         return Promise.resolve(res)
-//     }
-// }
-
-// const chamadaComAsyncAwait = async () => {
-//     try {
-//         const resultado = await fatorial(10)
-//         console.log(resultado)
-//     }
-//     catch(e) {
-//         console.log("erro: " + erro)
-//     }
-// }
-
-// function chamadaComThenCatch() {
-//     fatorial(n)
-//     .then(res => console.log(res))
-//     .catch(erro => console.log("Erro: " + erro))
-// }
-// chamadaComThenCatch()
-
-// async function hello() {
-//     return "hello"
-// }
-// hello().then(res => console.log(res))
-
-axios.get(end)
-.then((res) => {
-    console.log(res['data'])
-    console.log('====================================')
-    return res["data"]
-})
-.then((res) => {
-    console.log(res.list)
-    console.log("==========================================")
-    return res.list
-})
-.then((res) => {
-    
-    for (let previsao of res) {
-        console.log(new Date (+previsao.dt * 1000).toLocaleString())
-        console.log(`temperatura Minima: ${previsao.main.temp_min}`)
-        console.log(`temperatura Maxima: ${previsao.main.temp_max}`)
-        console.log("*********************************************")
-    }
-    console.log('--------------------------------------')
-    // res.forEach(previsao => {
-    //     console.log(previsao.dt);
-    // })
+LogLat(city).then(result => {
+  return FeelsLike_Description(result)
 })
